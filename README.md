@@ -16,6 +16,7 @@ observe the html in output.
 
 3. Activate the environment
 	- Execute: conda activate tfm_cic
+	- Select the virtual environment on the bottom part of VS Studio Code
 
 4. Run the script, then this message should appear in the terminal below:
 	Dash is running on http://127.0.0.1:8050/
