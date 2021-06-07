@@ -47,10 +47,9 @@ values_column_names = ["time", "branch" , "organization", "substation", "transfo
                         "aplus_L3", "aminus_L3", "RplusL_L3", "RminusL_L3", "RplusC_L3", "RminusC_L3"]
 
 # Retrieve data on values
-script_path = os.path.dirname(__file__)
-
+# script_path = os.path.dirname(__file__)
 # Read csv from local file
-data_lvsm = pd.read_csv(script_path + '/../DATA/LVSM_Def.csv',  sep = ';', header=0, names=values_column_names)
+data_lvsm = pd.read_csv('../DATA/LVSM_Def.csv',  sep = ';', header=0, names=values_column_names)
 
 # Read csv from GitHub
 # url_data = 'https://gitlab.com/Ander_gargas/tfm-cic/-/raw/master/Listado_Trafos.csv'
@@ -74,7 +73,6 @@ data[["V_L1", "I_L1", "W_L1", "QL_L1", "QC_L1","cos_L1", "angle_L1",
                            "temp_amb"]].astype(float)
 
 ### Deal with the "24:00" problem. Adapt BOTH the hour and the day. 
-
 # Get the indexes and replace hour
 for i, date in enumerate(data['time']):
     if date.split()[1].split(':')[0] == '24':
@@ -98,6 +96,20 @@ data_new = data_new.drop(["time"], axis=1)
 data_new = pd.concat([data_new['hour'], data_new.drop('hour',axis=1)], axis=1)
 data_new = pd.concat([data_new['date'], data_new.drop('date',axis=1)], axis=1)
 
+# Cleaning NA values
+if data_new.isna().sum().sum() < .10 * len(data_new): 
+    # print ("Cleaning NA values from dataset")
+    data_new = data_new.dropna()
+else:
+    raise Exception("Careful! Deleting NaN values would cut most of the dataset")
+
+# Remove duplicates
+if data.duplicated().sum() < .10 * len(data_new): 
+    # print ("Cleaning duplicate values from dataset")
+    data_new = data_new.drop_duplicates(subset=['date', 'hour', 'substation', 'App SW'])
+else:
+    raise Exception("Careful! Deleting duplicated values would cut most of the dataset")
+
 
 # Numeric values extraction 2 (excel Listado_Trafos.xlsx)
 info_column_names = ["ident", "transformer", "substation", "MT_line", "manufacturer", 
@@ -106,7 +118,7 @@ info_column_names = ["ident", "transformer", "substation", "MT_line", "manufactu
 
 # Retrieve info table  
 # Read csv from local file
-full_info = pd.read_csv(script_path +'/../DATA/Listado_Trafos.csv', header=0, sep=';', names=info_column_names) 
+full_info = pd.read_csv('../DATA/Listado_Trafos.csv', header=0, sep=';', names=info_column_names) 
 
 # Read csv from gitlab files
 # url_info = 'https://gitlab.com/Ander_gargas/tfm-cic/-/raw/master/Listado_Trafos.csv'
