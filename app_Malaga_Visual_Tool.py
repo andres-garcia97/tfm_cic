@@ -16,6 +16,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import datetime
 import sys, os
+from os import system
 import plotly.express as px
 
 # Specific libraries
@@ -29,7 +30,7 @@ from plotly import graph_objs as go
 from datetime import datetime as dt
 from datetime import date
 from datetime import timedelta
-from os import system
+
 
 # print(__doc__)
 # _ = system('cls')
