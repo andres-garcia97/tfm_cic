@@ -24,7 +24,7 @@ observe the html in output.
 
 5. Then after a few minutes, enter in the local url http://127.0.0.1:8050/
 
-6. Use the tool as desired
+6. Use the tool as wished
 
 
 Notes:  To remove the environment once used, delete by executing: conda remove --name myenv --all
