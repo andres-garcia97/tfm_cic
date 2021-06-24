@@ -10,8 +10,8 @@
 
 # Generic libraries
 import pandas as pd
-import requests
-from io import StringIO
+# import requests
+# from io import StringIO
 import numpy as np
 import matplotlib.pyplot as plt
 import datetime
@@ -49,6 +49,7 @@ values_column_names = ["time", "branch" , "organization", "substation", "transfo
 
 # Retrieve data on values
 # script_path = os.path.dirname(__file__)
+
 # Read csv from local file
 data_lvsm = pd.read_csv('../DATA/LVSM_Def.csv',  sep = ';', header=0, names=values_column_names)
 
@@ -151,8 +152,7 @@ for i in range(len(info)):
 
 ### DASH LAYOUT PREPARATION
 # App initialization
-external_stylesheets = [dbc.themes.CERULEAN]
-app = dash.Dash(__name__, title='Malaga Visual Tool', external_stylesheets=external_stylesheets)
+app = dash.Dash(__name__, title='Malaga Visual Tool', external_stylesheets=[dbc.themes.CERULEAN])
 
 # app = dash.Dash(__name__, title='Malaga Visual Tool')
 server = app.server
@@ -172,7 +172,7 @@ intro_text_eng = """
     **About this app**  
     This app implements a visualization dashboard made to get insight on the power network evolution over time. It displays data registered from
     past years from the [Smart City Malaga's dataset of city of Malaga](http://malagasmart.malaga.eu/es/habitat-sostenible-y-seguro/energia/smartcity-malaga/#.X6Bar4hKhPY) 
-    during the 2019-2020 period. 
+    during the 2019 - 2020 period. 
 
     Select the represented variable from the box menu, click on the button to run the figure and choose the instantaneous snapshot of the
     city electrical grid in terms of congestion throughout their respective transformer centers. 
@@ -237,8 +237,6 @@ app.layout = html.Div(  # Global div
                                 dcc.Markdown(intro_text_esp), 
                                 html.Br(),
                                 dcc.Markdown(intro_text_eng),
-                                html.Br(),
-
                                 html.H4("Malaga Transformer Center", style={'margin-left':'30px'}),
                             ],
                             style = {
@@ -254,15 +252,7 @@ app.layout = html.Div(  # Global div
                         html.Div(           # Right sub-section: User's menu
                             children=[
                                 html.H4("Opciones del mapa"),
-                                                        
-                                html.P("Modo de visualización"),
-                                dcc.RadioItems(
-                                    id='modo-vista',
-                                    options=[{'label': i, 'value': i} for i in [' Imagen', ' Evolución diaria']],
-                                    value='Imagen'
-                                ),
-                                html.Br(),
-                                
+                                html.Br(),                        
                                 html.Div(           # Selection of variable and date
                                     children = [
                                         html.Div(
@@ -340,20 +330,14 @@ app.layout = html.Div(  # Global div
                                 html.Br(),
                                                         
                                 html.Div(
-                                    html.Button(
-                                        " Ejecutar ",
-                                        id="btn-updt-map",
-                                        title="Lanzar la presentación de resultados",
-                                        n_clicks=0
-                                    )
-                                    # dbc.Button(
-                                    #     " Ejecutar ",
-                                    #     color = "Primary",
-                                    #     className="mr-1",
-                                    #     block = True,
-                                    #     id="btn-updt-map",
-                                    #     n_clicks=0
-                                    # ),
+                                    children=[
+                                        html.Button(
+                                            " Ejecutar ",
+                                            id="btn-updt-map",
+                                            title="Lanzar la presentación de resultados",
+                                            className="button-primary"
+                                        )
+                                    ],
                                 ),
                             ], 
                             style = {
@@ -365,7 +349,7 @@ app.layout = html.Div(  # Global div
                         ),
 
                         html.Br(),
-                        html.Hr(style = {'margin-top': '2%', 'margin-right': '1%'})
+                        html.Hr(style = {'margin-top': '2%', 'margin-right': '1%', 'margin-left': '1%'})
                     ]
                 ),
                 
@@ -373,91 +357,140 @@ app.layout = html.Div(  # Global div
                     children = [
                         dcc.Graph(
                             id="map-graph", 
-                            config={"responsive": True},
-                            style={
-                                'left': '0px',
-                                'top' : '0px',
-                                'display': 'block'
-                            } 
                         )
                     ],
-                    style = {
-                       'display': 'block',
-                       'margin-top' : '0'
-                    }
                 ),
 
                 html.Div(           # Third Division: histogram + line figure
                     children = [
-                        html.Div(           # Top sub-section: CT selection
-                            children =[
-                                html.P(
-                                """Selecciona la subestación:"""
+                        dbc.Row(           # Top sub-section: CT selection
+                            [
+                                dbc.Col(html.P(children="""Selecciona la subestación:""", style={'textAlign':'right'}), width = 3),
+                                dbc.Col(dcc.RadioItems(
+                                            id='modo-hist',
+                                            options=[{'label': i, 'value': i} for i in ['Todas', 'Manualmente']],
+                                            value='Manualmente',
+                                            style={'textAlign':'left'}
+                                ), width = 3),
+                                dbc.Col(dcc.Dropdown(
+                                        id="substation-dropdown",
+                                        options=[
+                                            {"label": 'S201', "value": 'S201'},
+                                            {"label": 'S2274', "value": 'S2274'},
+                                            {"label": 'S242', "value": 'S242'},
+                                            {"label": 'S286', "value": 'S286'},
+                                            {"label": 'S287', "value": 'S287'},
+                                            {"label": 'S406', "value": 'S406'},
+                                            {"label": 'S480', "value": 'S480'},
+                                            {"label": 'S499', "value": 'S499'},
+                                            {"label": 'S531', "value": 'S531'},
+                                            {"label": 'S612', "value": 'S612'},
+                                            {"label": 'S68638', "value": 'S68638'},
+                                            {"label": 'S7116', "value": 'S7116'},
+                                            {"label": 'S733', "value": 'S733'},
+                                            {"label": 'S740', "value": 'S740'},
+                                            {"label": 'S744', "value": 'S744'},
+                                            {"label": 'S76020', "value": 'S76020'},
+                                            {"label": 'S813', "value": 'S813'},
+                                            {"label": 'S820', "value": 'S820'},
+                                            {"label": 'S850', "value": 'S850'},
+                                            {"label": 'S868', "value": 'S868'}
+                                        ],
+                                        placeholder="Selecciona una o varias subestaciones",
+                                        multi=True,
+                                        value='S201',
+                                        style = {'align': 'left'}
+                                    ), width = 4
+                                )
+                            ], justify = 'center'
+                        ),
+                        dbc.Row(
+                            [
+                                dbc.Col(           # Left sub-section: histogram on variable
+                                    dcc.Graph(id="histogram"),
+                                    width = 6
                                 ),
-                                dcc.RadioItems(
-                                    id='modo-hist',
-                                    options=[{'label': i, 'value': i} for i in ['Todas', 'Manualmente']],
-                                    value='Manualmente'
-                                ),
-                                dcc.Dropdown(
-                                    id="substation-dropdown",
-                                    options=[
-                                        {"label": 'S201', "value": 'S201'},
-                                        {"label": 'S2274', "value": 'S2274'},
-                                        {"label": 'S242', "value": 'S242'},
-                                        {"label": 'S286', "value": 'S286'},
-                                        {"label": 'S287', "value": 'S287'},
-                                        {"label": 'S406', "value": 'S406'},
-                                        {"label": 'S480', "value": 'S480'},
-                                        {"label": 'S499', "value": 'S499'},
-                                        {"label": 'S531', "value": 'S531'},
-                                        {"label": 'S612', "value": 'S612'},
-                                        {"label": 'S68638', "value": 'S68638'},
-                                        {"label": 'S7116', "value": 'S7116'},
-                                        {"label": 'S733', "value": 'S733'},
-                                        {"label": 'S740', "value": 'S740'},
-                                        {"label": 'S744', "value": 'S744'},
-                                        {"label": 'S76020', "value": 'S76020'},
-                                        {"label": 'S813', "value": 'S813'},
-                                        {"label": 'S820', "value": 'S820'},
-                                        {"label": 'S850', "value": 'S850'},
-                                        {"label": 'S868', "value": 'S868'}
-                                    ],
-                                    placeholder="Selecciona una subestacion",
-                                    multi=True,
-                                    value = 'S201'
+
+                                dbc.Col(           # Right sub-section: dropdown CT + line figure
+                                    dcc.Graph(id="line"),
+                                    width = 6
                                 )
                             ],
-                            style = {
-                                'display': 'block',
-                                'width': '40%',
-                                'margin-left' : '30%'
-                            }
-                        ),
-
-                        html.Div(           # Left sub-section: histogram on variable
-                            children = [
-                                dcc.Graph(id="histogram")
-                            ],
-                            style = {
-                                'display' : 'inline-block',
-                                'width' : '45%',
-                                'float' : 'left'
-                            }
-                        ),
-
-                        html.Div(           # Right sub-section: dropdown CT + line figure
-                            children = [
-                                dcc.Graph(id="line")
-                            ],
-                            style = {
-                                'display' : 'inline-block',
-                                'width' : '45%',
-                                'margin-left' : '55px'
-                            }
+                            no_gutters = True
                         )
-                    ]
-                )                  
+                    ]                   
+                )           
+
+                # html.Div(           # Third Division: histogram + line figure
+                #     children = [
+                #         html.Div(           # Top sub-section: CT selection
+                #             children =[
+                #                 html.P(
+                #                 """Selecciona la subestación:"""
+                #                 ),
+                #                 dcc.RadioItems(
+                #                     id='modo-hist',
+                #                     options=[{'label': i, 'value': i} for i in ['Todas', 'Manualmente']],
+                #                     value='Manualmente'
+                #                 ),
+                #                 dcc.Dropdown(
+                #                     id="substation-dropdown",
+                #                     options=[
+                #                         {"label": 'S201', "value": 'S201'},
+                #                         {"label": 'S2274', "value": 'S2274'},
+                #                         {"label": 'S242', "value": 'S242'},
+                #                         {"label": 'S286', "value": 'S286'},
+                #                         {"label": 'S287', "value": 'S287'},
+                #                         {"label": 'S406', "value": 'S406'},
+                #                         {"label": 'S480', "value": 'S480'},
+                #                         {"label": 'S499', "value": 'S499'},
+                #                         {"label": 'S531', "value": 'S531'},
+                #                         {"label": 'S612', "value": 'S612'},
+                #                         {"label": 'S68638', "value": 'S68638'},
+                #                         {"label": 'S7116', "value": 'S7116'},
+                #                         {"label": 'S733', "value": 'S733'},
+                #                         {"label": 'S740', "value": 'S740'},
+                #                         {"label": 'S744', "value": 'S744'},
+                #                         {"label": 'S76020', "value": 'S76020'},
+                #                         {"label": 'S813', "value": 'S813'},
+                #                         {"label": 'S820', "value": 'S820'},
+                #                         {"label": 'S850', "value": 'S850'},
+                #                         {"label": 'S868', "value": 'S868'}
+                #                     ],
+                #                     placeholder="Selecciona una subestacion",
+                #                     multi=True,
+                #                     value = 'S201'
+                #                 )
+                #             ],
+                #             style = {
+                #                 'display': 'block',
+                #                 'width': '40%',
+                #                 'margin-left' : '30%'
+                #             }
+                #         ),
+
+                #         html.Div(           # Left sub-section: histogram on variable
+                #             children = [
+                #                 dcc.Graph(id="histogram")
+                #             ],
+                #             style = {
+                #                 'display' : 'inline-block',
+                #                 'width' : '50%',
+                #                 'float' : 'left'
+                #             }
+                #         ),
+
+                #         html.Div(           # Right sub-section: dropdown CT + line figure
+                #             children = [
+                #                 dcc.Graph(id="line")
+                #             ],
+                #             style = {
+                #                 'display' : 'inline-block',
+                #                 'width' : '49%'
+                #             }
+                #         )
+                #     ]
+                # )                  
             ],
         ),
     ],
@@ -467,13 +500,13 @@ app.layout = html.Div(  # Global div
 
 ### APP CALLBACKS
 
-# Adapt the menu depending on the selected mode
+# Display Dropdown list on Trafos only when 'Manualmente' is selected, hide if 'Todas' is selected
 @app.callback(
-    Output("hour-div", "style"), 
-    [Input("modo-vista", "value")]
+    Output("substation-dropdown", "style"), 
+    [Input("modo-hist", "value")]
 )
-def update_div(visual_mode):
-    if visual_mode == "Evolución diaria":
+def update_div(selection_mode):
+    if selection_mode == "Todas":
         return {"display": "none"}
     return {"display": "block"}
 
