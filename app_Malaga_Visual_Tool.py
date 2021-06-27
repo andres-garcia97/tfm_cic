@@ -152,7 +152,13 @@ for i in range(len(info)):
 
 ### DASH LAYOUT PREPARATION
 # App initialization
-app = dash.Dash(__name__, title='Malaga Visual Tool', external_stylesheets=[dbc.themes.CERULEAN])
+app = dash.Dash(__name__, 
+    title='Malaga Visual Tool', 
+    external_stylesheets=[dbc.themes.CERULEAN],
+    meta_tags=[
+        {"name": "viewport", "content": "width=device-width, initial-scale=1"}
+    ]
+)
 
 # app = dash.Dash(__name__, title='Malaga Visual Tool')
 server = app.server
@@ -188,27 +194,26 @@ app.layout = html.Div(  # Global div
             children = [
                 html.H2(
                     "Malaga Visual Tool",
-                    # height='55px',
                     style={
                         'display': 'inline-block',
-                        'margin-left': '20px'
+                        'margin-left': '2%'
                     }
                 ),
                 html.Img(
                     # src="https://drive.google.com/uc?export=view&id=1m17KAS2GEoGND8UsyvYH8BoqpVQ0hIBg",
                     src='/assets/smart_malaga_logo.png',
-                    height='55px',  #55 
-                    width='85px',   #85
+                    height='30%',  #55px 
+                    width='6%',   #85px
                     style={
                         'display': 'inline-block',
-                        'margin-left': '600px',
+                        'margin-left': '53%',
                     }
                 ),
                 html.Img(
                     # src="https://drive.google.com/uc?export=view&id=1zoq8aGDBkMN6gbRcFmGQg1aKpN-0DCdQ",
                     src='/assets/logo_cic.png',
-                    height='55px',  #55 
-                    width='150px',  #150
+                    height='30%',  #55px 
+                    width='10%',  #150px
                     style={
                         'display': 'inline-block',
                     }
@@ -219,14 +224,29 @@ app.layout = html.Div(  # Global div
                 'flex-direction': 'row',
                 'align-items': 'center',
                 'justify-content': 'center',
-                'borderBottom': 'thin lightgrey solid',
-                'heigth': '70px',
+                'heigth': '5%',   # 70px
                 'background': 'linear-gradient(90deg, lightblue, snow, white)'
             }
-            # className="header__title",            # used with CSS to style elements with common properties 
+            # className="header_title",            # used with CSS to style elements with common properties 
         ),  
+
+        html.Div(
+            dbc.Tabs(
+                [
+                    dbc.Tab(label="Heatmap", tab_id="heatmap", style = {'width': '5%'}),
+                    dbc.Tab(label="Outlier Detector", tab_id="outlier_detect", style = {'width': '5%'}),
+                ],
+                id="body_tabs",
+                active_tab="heatmap",
+            ),
+            style={
+                    'display': 'block',
+                    'padding-left': '3%',
+                    'background': 'linear-gradient(90deg, lightblue, snow, white)'
+                }
+        ),
                
-        html.Div(             # Body block
+        html.Div(             # Body block Heatmap
             [   
                 html.Div(           # First division: description, title  and user's menu
                     children=[
@@ -237,15 +257,15 @@ app.layout = html.Div(  # Global div
                                 dcc.Markdown(intro_text_esp), 
                                 html.Br(),
                                 dcc.Markdown(intro_text_eng),
-                                html.H4("Malaga Transformer Center", style={'margin-left':'30px'}),
+                                html.H4("Malaga Transformer Center Heatmap", style={'margin-left':'6%'}),   # 30px
                             ],
                             style = {
                                 'text-align': 'justify',
                                 'display': 'inline-block',
                                 'width': '62%', 
                                 'float': 'left',
-                                'margin-left' : '10px',
-                                'padding': '10px 0 10px 10px'
+                                'margin-left' : '2%',   #10px
+                                'padding': '1%'   #10px
                             }
                         ),
 
@@ -285,10 +305,7 @@ app.layout = html.Div(  # Global div
                                                     max_date_allowed=max(data['time']).date(),
                                                     initial_visible_month='2019-06-26',
                                                     date='2019-06-26',
-                                                    display_format="D/M/Y",
-                                                    style={
-                                                        "border": "2px solid black",
-                                                    },
+                                                    display_format="D/M/Y"
                                                 ),
                                             ],
                                             style={
@@ -343,8 +360,8 @@ app.layout = html.Div(  # Global div
                             style = {
                                 'display': 'inline-block',
                                 'width': '30%',
-                                'margin-left' : '55px',
-                                'padding':'5px 5px 5px 5px'
+                                'margin-left' : '3%',     # 55px
+                                'padding':'1%'      # 5px
                             }
                         ),
 
@@ -419,79 +436,10 @@ app.layout = html.Div(  # Global div
                             no_gutters = True
                         )
                     ]                   
-                )           
-
-                # html.Div(           # Third Division: histogram + line figure
-                #     children = [
-                #         html.Div(           # Top sub-section: CT selection
-                #             children =[
-                #                 html.P(
-                #                 """Selecciona la subestación:"""
-                #                 ),
-                #                 dcc.RadioItems(
-                #                     id='modo-hist',
-                #                     options=[{'label': i, 'value': i} for i in ['Todas', 'Manualmente']],
-                #                     value='Manualmente'
-                #                 ),
-                #                 dcc.Dropdown(
-                #                     id="substation-dropdown",
-                #                     options=[
-                #                         {"label": 'S201', "value": 'S201'},
-                #                         {"label": 'S2274', "value": 'S2274'},
-                #                         {"label": 'S242', "value": 'S242'},
-                #                         {"label": 'S286', "value": 'S286'},
-                #                         {"label": 'S287', "value": 'S287'},
-                #                         {"label": 'S406', "value": 'S406'},
-                #                         {"label": 'S480', "value": 'S480'},
-                #                         {"label": 'S499', "value": 'S499'},
-                #                         {"label": 'S531', "value": 'S531'},
-                #                         {"label": 'S612', "value": 'S612'},
-                #                         {"label": 'S68638', "value": 'S68638'},
-                #                         {"label": 'S7116', "value": 'S7116'},
-                #                         {"label": 'S733', "value": 'S733'},
-                #                         {"label": 'S740', "value": 'S740'},
-                #                         {"label": 'S744', "value": 'S744'},
-                #                         {"label": 'S76020', "value": 'S76020'},
-                #                         {"label": 'S813', "value": 'S813'},
-                #                         {"label": 'S820', "value": 'S820'},
-                #                         {"label": 'S850', "value": 'S850'},
-                #                         {"label": 'S868', "value": 'S868'}
-                #                     ],
-                #                     placeholder="Selecciona una subestacion",
-                #                     multi=True,
-                #                     value = 'S201'
-                #                 )
-                #             ],
-                #             style = {
-                #                 'display': 'block',
-                #                 'width': '40%',
-                #                 'margin-left' : '30%'
-                #             }
-                #         ),
-
-                #         html.Div(           # Left sub-section: histogram on variable
-                #             children = [
-                #                 dcc.Graph(id="histogram")
-                #             ],
-                #             style = {
-                #                 'display' : 'inline-block',
-                #                 'width' : '50%',
-                #                 'float' : 'left'
-                #             }
-                #         ),
-
-                #         html.Div(           # Right sub-section: dropdown CT + line figure
-                #             children = [
-                #                 dcc.Graph(id="line")
-                #             ],
-                #             style = {
-                #                 'display' : 'inline-block',
-                #                 'width' : '49%'
-                #             }
-                #         )
-                #     ]
-                # )                  
+                )              
             ],
+            style = {'display': 'block'},
+            id = 'body_heatmap'
         ),
     ],
 )
@@ -499,6 +447,16 @@ app.layout = html.Div(  # Global div
 
 
 ### APP CALLBACKS
+
+@app.callback(
+   Output(component_id='body_heatmap', component_property='style'),
+   [Input(component_id='body_tabs', component_property='active_tab')])
+
+def update_div(visibility_state):
+    if visibility_state == 'heatmap':
+        return {'display': 'block'}
+    if visibility_state == 'outlier_detect':
+        return {'display': 'none'}
 
 # Display Dropdown list on Trafos only when 'Manualmente' is selected, hide if 'Todas' is selected
 @app.callback(
@@ -593,28 +551,26 @@ def update_map(n_clicks, date_picker, hour_selector, variable_items):
     obs_values = obs_values.append(pd_temp_list, ignore_index = True)
 
     # FIRST VERSION: usando density_mapbox de Plotly Express - Pro: lo hace todo bien, Contra: muy delgado
-    fig = px.density_mapbox(obs_values, lat='lat', lon='long', z=variables_dict[variable_items], radius=25,
-                            center=dict(lat=36.72016, lon=-4.42034), zoom=12, hover_name='substation', hover_data=['manufacturer','power'],
-                            mapbox_style="stamen-terrain")
+    # fig = px.density_mapbox(obs_values, lat='lat', lon='long', z=variables_dict[variable_items], radius=25,
+    #                         center=dict(lat=36.72016, lon=-4.42034), zoom=12, hover_name='substation', hover_data=['manufacturer','power'],
+    #                         mapbox_style="stamen-terrain")
 
-    # SECOND VERSION: usando Density_mapbox de graph_objects - Pro: Customizable, el tamaño es bueno, Contra: no sé cómo centrarlo en Malaga
-    #                                                               ni como ponerle hoverdata
-    # fig = go.Figure(
-    #     go.Densitymapbox(
-    #         lat = obs_values['lat'], lon=obs_values['long'], 
-    #         z = obs_values[variables_dict[variable_items]], 
-    #         zoom = 5,
-    #         radius = 25
-    #     )
-    # )
+    # SECOND VERSION: usando Density_mapbox de graph_objects - Pro: Customisable, the scope is adaptable to the window size
+    fig = go.Figure(
+        go.Densitymapbox(
+            lat = obs_values['lat'], lon=obs_values['long'], 
+            z = obs_values[variables_dict[variable_items]],
+            customdata = obs_values['substation'],
+            hovertemplate = '<b>CT code: S%{customdata}<br>Value: %{z}</b><extra></extra>',
+        )
+    )
 
-    # fig.update_layout(
-    #     mapbox_style = "stamen-terrain", 
-    #     mapbox_center_lon = -4.42034, mapbox_center_lat = 36.72016,
-    #     margin = {"r":40,"t":0,"l":40,"b":40},
-    #     # hovertext = obs_values['substation'],
-    #     # hoverinfo = [obs_values['manufacturer'],obs_values['power']],
-    # )
+    fig.update_layout(
+        mapbox_style = "stamen-terrain", 
+        mapbox_center_lon = -4.42034, mapbox_center_lat = 36.72016,
+        margin = {"r": 40,"t": 0,"l": 40,"b": 40},
+        mapbox_zoom = 12,
+    )
 
     fig.update_layout(transition_duration=700)
 
@@ -701,7 +657,6 @@ def update_histogram(date_picker, hour_selector, variable_dropdown, substation_d
         obs_values, 
         x = obs_values['substation'], y = variables_dict[variable_dropdown], 
     )
-    # fig = px.histogram(obs_values, x=obs_values['substation'], y=variables_dict[variable_dropdown])
 
     fig.update_traces(
         marker_color = colors
