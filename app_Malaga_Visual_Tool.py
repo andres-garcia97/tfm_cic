@@ -10,12 +10,9 @@
 
 # Generic libraries
 import pandas as pd
-# import requests
-# from io import StringIO
 import numpy as np
 import matplotlib.pyplot as plt
 import datetime
-import sys, os
 from os import system
 import plotly.express as px
 
@@ -31,13 +28,21 @@ from datetime import datetime as dt
 from datetime import date
 from datetime import timedelta
 
+# ML Libraries
+from sklearn.preprocessing import StandardScaler
+from sklearn.decomposition import PCA
+from sklearn.cluster import DBSCAN
 
 # print(__doc__)
 # _ = system('cls')
 
-### DATA EXTRACTION
+### CONSTANTS
+LATENT_SHAPE = 3
+EPS = 0.55
+N = 20000
 
-# Numeric values extraction (excel LVSM_Def.xlsx)
+###### DATA EXTRACTION
+### Numeric values extraction 1 (excel LVSM_Def.xlsx)
 values_column_names = ["time", "branch" , "organization", "substation", "transformer_code", "App SW", 
                         "V_L1", "I_L1", "W_L1", "QL_L1", "QC_L1","cos_L1", "angle_L1",
                         "V_L2", "I_L2", "W_L2", "QL_L2", "QC_L2","cos_L2", "angle_L2",
@@ -46,9 +51,6 @@ values_column_names = ["time", "branch" , "organization", "substation", "transfo
                         "aplus_L1", "aminus_L1", "RplusL_L1", "RminusL_L1", "RplusC_L1", "RminusC_L1", 
                         "aplus_L2", "aminus_L2", "RplusL_L2", "RminusL_L2", "RplusC_L2", "RminusC_L2",
                         "aplus_L3", "aminus_L3", "RplusL_L3", "RminusL_L3", "RplusC_L3", "RminusC_L3"]
-
-# Retrieve data on values
-# script_path = os.path.dirname(__file__)
 
 # Read csv from local file
 data_lvsm = pd.read_csv('../DATA/LVSM_Def.csv',  sep = ';', header=0, names=values_column_names)
@@ -100,20 +102,35 @@ data_new = pd.concat([data_new['date'], data_new.drop('date',axis=1)], axis=1)
 
 # Cleaning NA values
 if data_new.isna().sum().sum() < .10 * len(data_new): 
-    # print ("Cleaning NA values from dataset")
     data_new = data_new.dropna()
 else:
     raise Exception("Careful! Deleting NaN values would cut most of the dataset")
 
 # Remove duplicates
 if data.duplicated().sum() < .10 * len(data_new): 
-    # print ("Cleaning duplicate values from dataset")
     data_new = data_new.drop_duplicates(subset=['date', 'hour', 'substation', 'App SW'])
 else:
     raise Exception("Careful! Deleting duplicated values would cut most of the dataset")
 
+# Feature extraction
+feat_names = ["V_L1", "I_L1", "W_L1", "QL_L1", "QC_L1"]
+X = data_new[feat_names].to_numpy()
+date_list = data_new["date"].to_numpy()
+hour_list = data_new["hour"].to_numpy()
+substation_coding = {v: i for i, v in enumerate(np.unique(data_new[["substation"]]))}
+trafo_list = data_new["substation"].map(substation_coding).array
 
-# Numeric values extraction 2 (excel Listado_Trafos.xlsx)
+# Standardize Data
+sc = StandardScaler()
+X_std = sc.fit_transform(X)
+
+### PCA Creation and codings representation on latent space
+pca = PCA(n_components = 3, svd_solver='auto')
+codings = pca.fit_transform(X_std)
+
+
+
+### Numeric values extraction 2 (excel Listado_Trafos.xlsx)
 info_column_names = ["ident", "transformer", "substation", "MT_line", "manufacturer", 
                      "model", "series_num", "year", "power", "units", "stato_mat",
                      "lat", "long", "quantity", "family", "number"]
@@ -166,24 +183,30 @@ app.config.suppress_callback_exceptions = True
 
 intro_text_esp = """
     **Sobre la App**  
-    Esta aplicación pretende mostrar un tablero de control que dé visibilidad sobre la evolución temporal de congestión en la red eléctrica. 
-    Hace uso de datos registrados en el pasado de [la base de datos propia de Smart City Malaga](http://malagasmart.malaga.eu/es/habitat-sostenible-y-seguro/energia/smartcity-malaga/#.X6Bar4hKhPY) 
+    Esta Dashboard basado en Dash plotly ofrece visibilidad sobre la evolución temporal de congestión en la red eléctrica y analiza la existencia de datos anómalos en el pasado. 
+    La aplicación hace uso de datos registrados en [la base de datos de Smart City Malaga](http://malagasmart.malaga.eu/es/habitat-sostenible-y-seguro/energia/smartcity-malaga/#.X6Bar4hKhPY) 
     durante el periodo 2019 - 2020. 
 
-    Para ello, se ruega seleccionar la variable de interés, elegir el instante de la instantanea y de lanzar la visualización para apreciar
-    la salud de la malla eléctrica de la ciudad de Málaga a través de los datos registrados en los centros de transformación.
-    
+    En este tab "Heatmap", seleccionar la variable y fecha de interés. Según la hora escogida, tras ejecutar la visualización se observa la comparativa instantanea en varios formatos para cada uno de los centros y así evaluar la salud de la malla eléctrica de la ciudad de Málaga a través de las mediciones realizadas en ellos.
+        
 """
 intro_text_eng = """
     **About this app**  
-    This app implements a visualization dashboard made to get insight on the power network evolution over time. It displays data registered from
-    past years from the [Smart City Malaga's dataset of city of Malaga](http://malagasmart.malaga.eu/es/habitat-sostenible-y-seguro/energia/smartcity-malaga/#.X6Bar4hKhPY) 
+    This Plotly-based dashboard provides insight into the power network evolution over time and analyzes the existence of past outliers. 
+    The application displays data stored during past years in the [Smart City Malaga's dataset](http://malagasmart.malaga.eu/es/habitat-sostenible-y-seguro/energia/smartcity-malaga/#.X6Bar4hKhPY) 
     during the 2019 - 2020 period. 
 
-    Select the represented variable from the box menu, click on the button to run the figure and choose the instantaneous snapshot of the
-    city electrical grid in terms of congestion throughout their respective transformer centers. 
+    In this "Heatmap" tab, select the variable and datetime of interest. After executing the app, the instantaneous comparison is diaplyed into many formats for each of the centers, hence possible to evaluate the grid's health. 
 
 """
+
+intro_outlier_tab_esp = """
+    En esta pestaña "Outlier Detection", seleccionar el centro de transformacion y el marco temporal y observar los datos anómalos detectados durante dicho intervalo de tiempo. Dicha detección se basa en un modelo DBSCAN que genera un clustering sobre el conjunto de datos de dicho centro.
+    """
+
+intro_outlier_tab_eng = """
+    In this "Outlier Detection" tab, select the transformation center and timeframe to observe the outlier data points detected during this period. This detection is based on a DBSCAN clustering algorithm trained on the dataset belonging to this CT. After executing the app, the instantaneous comparison is displayed into many formats for each of the centers, hence possible to evaluate the grid's health. 
+    """
 
 
 ### LAYOUT OF THE DASH MAP
@@ -230,11 +253,11 @@ app.layout = html.Div(  # Global div
             # className="header_title",            # used with CSS to style elements with common properties 
         ),  
 
-        html.Div(
+        html.Div(           # Tabs for window selection
             dbc.Tabs(
                 [
-                    dbc.Tab(label="Heatmap", tab_id="heatmap", style = {'width': '5%'}),
-                    dbc.Tab(label="Outlier Detector", tab_id="outlier_detect", style = {'width': '5%'}),
+                    dbc.Tab(label="Heatmap", tab_id="heatmap", tab_style = {'width': '11%', 'textAlign': 'center'}),
+                    dbc.Tab(label="Outlier Detector", tab_id="outlier_detect", tab_style = {'width': '11%', 'textAlign': 'center'}),
                 ],
                 id="body_tabs",
                 active_tab="heatmap",
@@ -257,6 +280,7 @@ app.layout = html.Div(  # Global div
                                 dcc.Markdown(intro_text_esp), 
                                 html.Br(),
                                 dcc.Markdown(intro_text_eng),
+                                html.Br(),
                                 html.H4("Malaga Transformer Center Heatmap", style={'margin-left':'6%'}),   # 30px
                             ],
                             style = {
@@ -366,7 +390,7 @@ app.layout = html.Div(  # Global div
                         ),
 
                         html.Br(),
-                        html.Hr(style = {'margin-top': '2%', 'margin-right': '1%', 'margin-left': '1%'})
+                        html.Hr(style = {'margin-top': '1%', 'margin-right': '1%', 'margin-left': '1%'})
                     ]
                 ),
                 
@@ -441,23 +465,132 @@ app.layout = html.Div(  # Global div
             style = {'display': 'block'},
             id = 'body_heatmap'
         ),
-    ],
+
+
+
+        html.Div(             # Body block Outlier Detection
+            children = [
+                html.Div(           # First division: description, title and user's menu
+                    children=[
+                        html.Div(           # Left sub-section: Description and title
+                            id="intro-text-div-analysis", 
+                            children = [
+                                html.Br(),
+                                dcc.Markdown(intro_outlier_tab_esp), 
+                                html.Br(),
+                                dcc.Markdown(intro_outlier_tab_eng),
+                                html.Br(),
+                                html.H4("Malaga Transformer Clustering", style={'margin-left':'6%'}),   # 30px
+                            ],
+                            style = {
+                                'text-align': 'justify',
+                                'display': 'inline-block',
+                                'width': '55%', 
+                                'float': 'left',
+                                'margin-left' : '2%',   #10px
+                                'padding': '1%'   #10px
+                            }
+                        ),
+
+                        html.Div(           # Right sub-section: User's menu
+                            children=[
+                                html.H4("Opciones del Análisis"),
+                                html.Br(),                        
+                                html.Div(           # Selection of CT and timeframe
+                                    children = [
+                                        html.Div(       # Selection of the CT
+                                            children=[
+                                                html.P("Centro de Transformación"),
+                                                dcc.Dropdown( 
+                                                    id = 'substation-dropdown-analysis',    # Used to identify the dcc in callbacks
+                                                    options=[{'label': key, 'value': value} for key, value in substation_coding.items()],
+                                                    value = 11,      # The initial selected value
+                                                    placeholder = "Selecciona un CT"
+                                                ),
+                                            ],
+                                            style={
+                                                'display': 'block'
+                                            }
+                                        ),
+                                        html.Br(),
+                                        html.Div(       # Date Range
+                                            children = [
+                                                html.P("Rango de fechas"),
+                                                html.Div(
+                                                    dcc.DatePickerRange(
+                                                        id="date-picker-range",
+                                                        min_date_allowed=min(data['time']).date(),
+                                                        max_date_allowed=max(data['time']).date(),
+                                                        initial_visible_month='2019-08-01',
+                                                        start_date = '2019-08-01',
+                                                        end_date = '2019-11-01',
+                                                        display_format="D/M/Y"
+                                                    )
+                                                )
+                                            ]
+                                        ),
+                                    ]
+                                ),
+                                html.Br(),
+                                html.Div(
+                                    children=[
+                                        html.Button(
+                                            " Ejecutar ",
+                                            id="btn-updt-outlier",
+                                            title="Lanzar la visualización de resultados",
+                                            className="button-primary"
+                                        )
+                                    ],
+                                )                                                       
+                            ], 
+                            style = {
+                                'display': 'inline-block',
+                                'width': '35%',
+                                'margin-left' : '2%',     # 55px
+                                'padding':'1%'      # 5px
+                            }
+                        ),
+                        html.Br(),
+                        html.Hr(style = {'margin-top': '1%', 'margin-right': '1%', 'margin-left': '1%'})
+                    ]
+                ),
+
+                html.Div(           # Second Division: Outlier Detection map
+                    children = [
+                        html.H5(id="CT-selected-analysis", style={'textAlign': 'center', 'width': '80%', 'margin-left': '10%'}),
+                        dcc.Graph(
+                            id="outlier-3d-graph",
+                            style = {
+                                'width': '90vw'
+                                , 'height': '110vh'
+                                , 'margin-left': '6%'
+                            } 
+                        )
+                    ],
+                ),
+            ],
+            style = {'display': 'none'},
+            id = 'body_outlier_detect'
+        )
+    ]
 )
 
 
 
 ### APP CALLBACKS
-
+# Display one of the two tab contents
 @app.callback(
    Output(component_id='body_heatmap', component_property='style'),
+   Output(component_id='body_outlier_detect', component_property='style'),
    [Input(component_id='body_tabs', component_property='active_tab')])
 
-def update_div(visibility_state):
+def update_tab_content(visibility_state):
     if visibility_state == 'heatmap':
-        return {'display': 'block'}
+        return {'display': 'block'}, {'display': 'none'}
     if visibility_state == 'outlier_detect':
-        return {'display': 'none'}
+        return {'display': 'none'}, {'display': 'block'}
 
+###  CALLBACKS FROM HEATMAP TAB
 # Display Dropdown list on Trafos only when 'Manualmente' is selected, hide if 'Todas' is selected
 @app.callback(
     Output("substation-dropdown", "style"), 
@@ -533,8 +666,7 @@ def update_map(n_clicks, date_picker, hour_selector, variable_items):
     # List of elements missing their value
     missing_trafos_list = np.setdiff1d(full_list_trafos, filled_trafos)
 
-    # We now fill the list with the data we know from missing trafos, 
-    # but putting a 0 in the observed value
+    # We now fill the list with the data we know from missing trafos, but putting a 0 in the observed value
     temp_list = []
     column_names_missing = obs_values.columns
 
@@ -570,9 +702,8 @@ def update_map(n_clicks, date_picker, hour_selector, variable_items):
         mapbox_center_lon = -4.42034, mapbox_center_lat = 36.72016,
         margin = {"r": 40,"t": 0,"l": 40,"b": 40},
         mapbox_zoom = 12,
+        transition_duration=700
     )
-
-    fig.update_layout(transition_duration=700)
 
     return fig
 
@@ -588,29 +719,33 @@ def update_map(n_clicks, date_picker, hour_selector, variable_items):
 
 def update_histogram(date_picker, hour_selector, variable_dropdown, substation_dropdown, modo_hist):
 
+    # Data Preparation: Generate the appropiate date format then slice data
     date_picker_def = dt.strptime(date_picker, '%Y-%m-%d')
     day = date_picker_def.day
     month = date_picker_def.month
     year = date_picker_def.year
     d = datetime.datetime(int(year), int(month), int(day), int(hour_selector))
     date = d.strftime("%Y-%m-%d %H:%M")
-    obs_values = data[data.time == date][['substation',str(variables_dict[variable_dropdown])]]
+    
+    obs_values = data[data.time == date][['substation', str(variables_dict[variable_dropdown])]]
     obs_values['substation'] = list(map(lambda x: x.replace("S",""), obs_values['substation'].tolist()))
-
     obs_values["lat"] = list(map(lambda x: trafos_loc[x][0], obs_values["substation"].tolist()))
     obs_values["long"] = list(map(lambda x: trafos_loc[x][1], obs_values["substation"].tolist()))
     obs_values["year"] = list(map(lambda x: info[info.ident == x]["year"].tolist()[0], obs_values["substation"].tolist()))
     obs_values["manufacturer"] = list(map(lambda x: info[info.ident == x]["manufacturer"].tolist()[0], obs_values["substation"].tolist()))
     obs_values["power"] = list(map(lambda x: info[info.ident == x]["power"].tolist()[0], obs_values["substation"].tolist()))    
 
+    # Select the trafos with values
     filled_trafos = list(map(lambda x: x.replace("S",""), data[data.time == date]["substation"].tolist()))
     full_list_trafos = list(trafos_loc.keys())                                                         
 
+    # Those trafos not having data are the difference between all trafos and those with measurement
     missing_trafos_list = np.setdiff1d(full_list_trafos, filled_trafos)
 
     temp_list = []
     column_names_missing = obs_values.columns
 
+    # When not having measurement, we fill info with 0 everywhere
     for element in missing_trafos_list:
         temp_list.append([element, 0, trafos_loc[element][0], trafos_loc[element][1],   
                     info[info.ident == element]["year"].tolist()[0],                 
@@ -640,7 +775,7 @@ def update_histogram(date_picker, hour_selector, variable_dropdown, substation_d
         for i in selected_indices:
             colors[i] = 'crimson'
 
-
+    # When Manual Selected
     else:
         if type(substation_dropdown) == str : 
             substation_dropdown = [substation_dropdown]
@@ -678,6 +813,7 @@ def update_line(date_picker, variable_dropdown, substation_dropdown, modo_hist):
         if(variable_dropdown is None):
             variable_dropdown = 'Tension'
 
+        # Data preparation: Format inputs, slice and generate obs_values, for the line plot
         substation = ['S201', 'S2274', 'S242', 'S286', 'S287', 'S406', 'S480', 'S499', 'S531', 'S612', 'S68638', 'S7116', 'S733', 'S740', 'S744', 'S76020', 'S813', 'S820', 'S850', 'S868']
         date_new = pd.to_datetime(date_picker, format = '%Y-%m-%d')
 
@@ -692,7 +828,7 @@ def update_line(date_picker, variable_dropdown, substation_dropdown, modo_hist):
 
         fig = px.line(data_complete_fin, x='hour', y=variables_dict[variable_dropdown], hover_name='substation', color= 'substation')
     
-
+    # When Manual Selected CT
     else:
         if(variable_dropdown is None):
             variable_dropdown = 'Tension'
@@ -718,6 +854,107 @@ def update_line(date_picker, variable_dropdown, substation_dropdown, modo_hist):
 
     
     return fig
+
+
+
+###  CALLBACKS FROM OUTLIER TAB
+
+# Generate message from results and outlier map
+@app.callback(
+    Output(component_id='outlier-3d-graph', component_property='figure'),
+    Output(component_id='CT-selected-analysis', component_property='children'),
+    [Input(component_id='btn-updt-outlier', component_property='n_clicks')],
+    [State(component_id='substation-dropdown-analysis', component_property='value'),
+     State(component_id='date-picker-range', component_property='start_date'),
+     State(component_id='date-picker-range', component_property='end_date')]
+)
+def update_outlier_graph(n_clicks, CT_selection, begin_date, end_date):
+    
+    ### Preparation of data
+    dt_begin_date = dt.strptime(begin_date, '%Y-%m-%d').date()
+    dt_end_date = dt.strptime(end_date, '%Y-%m-%d').date()
+
+    # PCA codings for points belonging to this CT
+    codings_CT = codings[trafo_list == CT_selection]
+
+    # Dates of data points belonging to this CT
+    date_list_CT = date_list[trafo_list == CT_selection]
+    hour_list_CT = hour_list[trafo_list == CT_selection]
+
+    # Coding of the points both being from the CT and inside the Date Range
+    codings_selected = codings[(trafo_list == CT_selection) & (dt_begin_date <= date_list) & (date_list <= dt_end_date)]
+
+    # Get the name of the CT from its encoded value in the dictionary
+    CT_name = list(substation_coding.keys())[list(substation_coding.values()).index(CT_selection)]
+
+    # Fit of the model
+    db = DBSCAN(eps = EPS, min_samples = 0.005 * len(codings_CT)).fit(codings_CT)
+    # Labels predicting clusters and outliers, giving to these last a -1 value
+    labels = db.labels_
+
+    indices_outliers = np.where(labels == -1)
+
+    # If there were no outliers detected
+    if np.where(labels == -1)[0].size == 0:
+        n_outlier = 0
+        msg = ('\nAmong the dates {} and {}, {} points were found in total belonging to the CT {}. Among these, none of them are outliers.\n'.format(dt_begin_date.strftime("%Y-%m-%d"), dt_end_date.strftime("%Y-%m-%d"), len(codings_selected), CT_name))
+
+    else:    
+        n_outlier = len(indices_outliers)
+        msg = ('\nAmong the dates {} and {}, {} points were found in total belonging to the CT {}. Among these, {} of them are outliers.\n'.format(dt_begin_date.strftime("%Y-%m-%d"), dt_end_date.strftime("%Y-%m-%d"), len(codings_selected), CT_name, n_outlier))
+
+    # Filter data in 3 different arrays
+    codings_not_selected = codings_CT[(dt_begin_date >= date_list_CT) | (date_list_CT >= dt_end_date)]
+    codings_inlier = codings_CT[(labels != -1) & (dt_begin_date <= date_list_CT) & (date_list_CT <= dt_end_date)]
+    codings_outlier = codings_CT[(labels == -1) & (dt_begin_date <= date_list_CT) & (date_list_CT <= dt_end_date)]
+
+    # We stack horizontally the codings, date (as a string) joined to hour and type of each point, useful for including hoverlabels and other properties in the visualization
+    codings_not_selected = np.hstack((
+        codings_not_selected, 
+        np.reshape([x.strftime('%m/%d/%Y') + y.strftime(' %H:%M') for x, y in zip(date_list_CT[(dt_begin_date >= date_list_CT) | (date_list_CT >= dt_end_date)], hour_list_CT[(dt_begin_date >= date_list_CT) | (date_list_CT >= dt_end_date)])], (len(codings_not_selected), 1)), 
+        np.reshape(['not_selected']*len(codings_not_selected), (len(codings_not_selected), 1))))
+
+    codings_inlier = np.hstack((
+        codings_inlier, 
+        np.reshape([x.strftime('%m/%d/%Y') + y.strftime(' %H:%M') for x, y in zip(date_list_CT[(labels != -1) & (dt_begin_date <= date_list_CT) & (date_list_CT <= dt_end_date)], hour_list_CT[(labels != -1) & (dt_begin_date <= date_list_CT) & (date_list_CT <= dt_end_date)])], (len(codings_inlier), 1)), 
+        np.reshape(['inlier']*len(codings_inlier), (len(codings_inlier), 1))))
+
+    codings_outlier = np.hstack((
+        codings_outlier, 
+        np.reshape([x.strftime('%m/%d/%Y') + y.strftime(' %H:%M') for x, y in zip(date_list_CT[(labels == -1) & (dt_begin_date <= date_list_CT) & (date_list_CT <= dt_end_date)], hour_list_CT[(labels == -1) & (dt_begin_date <= date_list_CT) & (date_list_CT <= dt_end_date)])], (len(codings_outlier), 1)), 
+        np.reshape(['outlier']*len(codings_outlier), (len(codings_outlier), 1))))
+
+    # Generate the df, with column names and types
+    if np.where(labels == -1)[0].size == 0:
+        df = pd.DataFrame(np.concatenate((codings_not_selected, codings_inlier), axis=0), columns = ['C1', 'C2', 'C3', 'date', 'type']).astype({'C1': float, 'C2': float, 'C3': float, 'date': str, 'type': str})
+    else:
+        df = pd.DataFrame(np.concatenate((codings_not_selected, codings_inlier, codings_outlier), axis=0), columns = ['C1', 'C2', 'C3', 'date', 'type']).astype({'C1': float, 'C2': float, 'C3': float, 'date': str, 'type': str})
+
+    # Mappings of attributes
+    symbol = {'not_selected': 'circle', 'inlier': 'circle', 'outlier': 'cross'}
+    color = {'not_selected': 'rgb(0, 0, 200)', 'inlier': 'rgb(0, 200, 0)', 'outlier': 'rgb(200, 0, 0)'}
+    size_dict = {'not_selected': 0.25, 'inlier': 1, 'outlier': 3}
+    
+    df['size'] = np.vectorize(size_dict.get)(df['type']).tolist()
+
+    # Generate the 3D scatter plot
+    fig = px.scatter_3d(df, x='C1', y='C2', z='C3', 
+                        size = 'size',
+                        color = 'type',
+                        color_discrete_map = color,
+                        symbol = 'type',
+                        symbol_map = symbol,
+                        hover_name = 'date',
+                        hover_data = {
+                            'type': True,
+                            'C1': False,
+                            'C2': False,
+                            'C3': False,
+                            'size': False,
+                        }
+                    )
+        
+    return fig, msg
 
 
 if __name__ == "__main__":
