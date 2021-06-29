@@ -817,16 +817,16 @@ def update_line(date_picker, variable_dropdown, substation_dropdown, modo_hist):
         substation = ['S201', 'S2274', 'S242', 'S286', 'S287', 'S406', 'S480', 'S499', 'S531', 'S612', 'S68638', 'S7116', 'S733', 'S740', 'S744', 'S76020', 'S813', 'S820', 'S850', 'S868']
         date_new = pd.to_datetime(date_picker, format = '%Y-%m-%d')
 
-        i = 0
         data_complete_fin = pd.DataFrame()
 
         for i in range(0,len(substation)):
             obs_values = (data_new[data_new.date == date_new][['substation',str(variables_dict[variable_dropdown]),'hour']])
             obs_values = (obs_values[obs_values.substation == substation[i]][['substation',str(variables_dict[variable_dropdown]),'hour']])
             data_complete_fin = data_complete_fin.append(obs_values)
-            i+=1
 
-        fig = px.line(data_complete_fin, x='hour', y=variables_dict[variable_dropdown], hover_name='substation', color= 'substation')
+        fig = px.line(data_complete_fin, x='hour', y=variables_dict[variable_dropdown], color= 'substation')
+
+        return fig
     
     # When Manual Selected CT
     else:
@@ -841,19 +841,38 @@ def update_line(date_picker, variable_dropdown, substation_dropdown, modo_hist):
 
         date_new = pd.to_datetime(date_picker, format = '%Y-%m-%d')
 
-        i = 0
         data_complete = pd.DataFrame()
 
         for i in range(0,len(substation_dropdown)):
             obs_values = (data_new[data_new.date == date_new][['substation',str(variables_dict[variable_dropdown]),'hour']])
             obs_values = (obs_values[obs_values.substation == substation_dropdown[i]][['substation',str(variables_dict[variable_dropdown]),'hour']])
             data_complete = data_complete.append(obs_values)
-            i+=1
 
-        fig = px.line(data_complete, x='hour', y=variables_dict[variable_dropdown], hover_name='substation', color= 'substation')
+        fig = px.line(data_complete, x='hour', y=variables_dict[variable_dropdown], 
+                hover_data={
+                    'hour': False
+                    , 'substation': False
+                }, 
+                color= 'substation'
+        )
 
-    
-    return fig
+        # Update the background layout so it hovers data based on a vertical line for all present graphs
+        fig.update_layout(
+            hovermode="x",
+            hoverdistance=100,      # Distance to show hover label of data point
+            spikedistance=1000,     # Distance to show spike
+            xaxis=dict(
+                showspikes=True, # Show spike line for X-axis
+                
+                # Format spike
+                spikethickness=2,
+                spikedash="dot",
+                spikecolor="#999999",
+                spikemode="across",
+            ),
+        )
+
+        return fig
 
 
 
