@@ -33,7 +33,7 @@ observe the html in output.
  * Environment: production
    WARNING: This is a development server. Do not use it in a production deployment.
 
-5. Then after a few minutes, enter in the local url http://127.0.0.1:8050/ and refresh the page until seeing the interface appear
+5. Then after a few minutes, enter in the local url http://127.0.0.1:8050/ and refresh the page until seeing the interface
 
 6. Use the tool as desired!
 
