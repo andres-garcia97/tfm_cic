@@ -4,9 +4,20 @@ In this file, I explain how to properly set the environment recquired in terms o
 observe the html in output.
 
 1. Prepare the following structure:
-	- app_Malaga_Visual_Tool.py and environment.yml file in the same folder (dir: ~/CODE/.)
-	- assets folder on the same level, with png and css files
-	- LVSM_Def.xlsx and Listafo_Trafos.xlsx on a different folder called DATA, one level (dir: ~/DATA/.)
+	- app_Malaga_Visual_Tool.py and environment.yml file in the same folder, called CODE (dir: ~/CODE/.)
+	- assets folder on the same level, with png and css files (dir: ~/CODE/assets/.)
+	- LVSM_Def.csv and Listafo_Trafos.csv on a different folder called DATA (dir: ~/DATA/.)
+
+	Structure should be as followed:
+		- CODE
+		    |- app_Malaga_Visual_tool.py
+		    |- environment.yml
+		    |- assets
+                         |- css files
+                         |- png images
+                - DATA
+		    |- LVSM_Def.csv
+		    |- Listado_Trafos.csv
 
 2. Open the VS Code interface and on a new terminal, after locating in the CODE folder:
 	- Execute: conda env create -f environment.yml
@@ -22,12 +33,12 @@ observe the html in output.
  * Environment: production
    WARNING: This is a development server. Do not use it in a production deployment.
 
-5. Then after a few minutes, enter in the local url http://127.0.0.1:8050/
+5. Then after a few minutes, enter in the local url http://127.0.0.1:8050/ and refresh the page until seeing the interface appear
 
-6. Use the tool as wished
+6. Use the tool as desired!
 
 
 Notes:  To remove the environment once used, delete by executing: conda remove --name myenv --all
 	Verify it was successfully deleted, try conda info --envs and check if it still exists
 
-	To prepare a new environment.yml: conda env export > environment.yml
+	To export a new or update the environment.yml: conda env export > environment.yml
