@@ -53,7 +53,7 @@ values_column_names = ["time", "branch" , "organization", "substation", "transfo
                         "aplus_L3", "aminus_L3", "RplusL_L3", "RminusL_L3", "RplusC_L3", "RminusC_L3"]
 
 # Read csv from local file
-data_lvsm = pd.read_csv('DATA/LVSM_Def.csv',  sep = ';', header=0, names=values_column_names)
+data_lvsm = pd.read_csv('DATA/LVSM_Def.csv',  sep = ';', header=0, names=values_column_names, encoding='latin-1')
 
 # Read csv from GitHub
 # url_data = 'https://gitlab.com/Ander_gargas/tfm-cic/-/raw/master/Listado_Trafos.csv'
@@ -107,7 +107,7 @@ else:
     raise Exception("Careful! Deleting NaN values would cut most of the dataset")
 
 # Remove duplicates
-if data.duplicated().sum() < .10 * len(data_new): 
+if data_new.duplicated().sum() < .10 * len(data_new): 
     data_new = data_new.drop_duplicates(subset=['date', 'hour', 'substation', 'App SW'])
 else:
     raise Exception("Careful! Deleting duplicated values would cut most of the dataset")
@@ -137,7 +137,7 @@ info_column_names = ["ident", "transformer", "substation", "MT_line", "manufactu
 
 # Retrieve info table  
 # Read csv from local file
-full_info = pd.read_csv('DATA/Listado_Trafos.csv', header=0, sep=';', names=info_column_names) 
+full_info = pd.read_csv('DATA/Listado_Trafos.csv', header=0, sep=';', names=info_column_names, encoding='latin-1') 
 
 # Read csv from gitlab files
 # url_info = 'https://gitlab.com/Ander_gargas/tfm-cic/-/raw/master/Listado_Trafos.csv'
@@ -647,7 +647,7 @@ def update_map(n_clicks, date_picker, hour_selector, variable_items):
     date = d.strftime("%Y-%m-%d %H:%M")
 
     # Generate the list of values to use in later functions
-    obs_values = data[data.time == date][['substation',str(variables_dict[variable_items])]]
+    obs_values = data[data.time == pd.Timestamp(d)][['substation',str(variables_dict[variable_items])]]
     obs_values['substation'] = list(map(lambda x: x.replace("S",""), obs_values['substation'].tolist()))     # Getting rid of the "S"
 
     # Finally, we concat the lat and long to this pd dataframe through our dictionnary
@@ -658,7 +658,7 @@ def update_map(n_clicks, date_picker, hour_selector, variable_items):
     obs_values["power"] = list(map(lambda x: info[info.ident == x]["power"].tolist()[0], obs_values["substation"].tolist()))    
 
     # List of transformers having a value
-    filled_trafos = list(map(lambda x: x.replace("S",""), data[data.time == date]["substation"].tolist())) 
+    filled_trafos = list(map(lambda x: x.replace("S",""), data[data.time == pd.Timestamp(d)]["substation"].tolist())) 
 
     # Complete list of tranformers
     full_list_trafos = list(trafos_loc.keys())                                                                
@@ -727,7 +727,7 @@ def update_histogram(date_picker, hour_selector, variable_dropdown, substation_d
     d = datetime.datetime(int(year), int(month), int(day), int(hour_selector))
     date = d.strftime("%Y-%m-%d %H:%M")
     
-    obs_values = data[data.time == date][['substation', str(variables_dict[variable_dropdown])]]
+    obs_values = data[data.time == pd.Timestamp(d)][['substation', str(variables_dict[variable_dropdown])]]
     obs_values['substation'] = list(map(lambda x: x.replace("S",""), obs_values['substation'].tolist()))
     obs_values["lat"] = list(map(lambda x: trafos_loc[x][0], obs_values["substation"].tolist()))
     obs_values["long"] = list(map(lambda x: trafos_loc[x][1], obs_values["substation"].tolist()))
@@ -736,7 +736,7 @@ def update_histogram(date_picker, hour_selector, variable_dropdown, substation_d
     obs_values["power"] = list(map(lambda x: info[info.ident == x]["power"].tolist()[0], obs_values["substation"].tolist()))    
 
     # Select the trafos with values
-    filled_trafos = list(map(lambda x: x.replace("S",""), data[data.time == date]["substation"].tolist()))
+    filled_trafos = list(map(lambda x: x.replace("S",""), data[data.time == pd.Timestamp(d)]["substation"].tolist()))
     full_list_trafos = list(trafos_loc.keys())                                                         
 
     # Those trafos not having data are the difference between all trafos and those with measurement
@@ -815,7 +815,7 @@ def update_line(date_picker, variable_dropdown, substation_dropdown, modo_hist):
 
         # Data preparation: Format inputs, slice and generate obs_values, for the line plot
         substation = ['S201', 'S2274', 'S242', 'S286', 'S287', 'S406', 'S480', 'S499', 'S531', 'S612', 'S68638', 'S7116', 'S733', 'S740', 'S744', 'S76020', 'S813', 'S820', 'S850', 'S868']
-        date_new = pd.to_datetime(date_picker, format = '%Y-%m-%d')
+        date_new = pd.to_datetime(date_picker, format = '%Y-%m-%d').date()
 
         data_complete_fin = pd.DataFrame()
 
@@ -839,7 +839,7 @@ def update_line(date_picker, variable_dropdown, substation_dropdown, modo_hist):
         if type(substation_dropdown) == str : 
             substation_dropdown = [substation_dropdown]
 
-        date_new = pd.to_datetime(date_picker, format = '%Y-%m-%d')
+        date_new = pd.to_datetime(date_picker, format = '%Y-%m-%d').date()
 
         data_complete = pd.DataFrame()
 
