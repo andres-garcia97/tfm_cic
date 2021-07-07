@@ -30,7 +30,8 @@ observe the html in output.
 	- Select the virtual environment on the bottom part of VS Studio Code
 
 4. Run the script, then this message should appear in the terminal below:
-	Dash is running on http://127.0.0.1:8050/
+
+	- Dash is running on http://127.0.0.1:8050/
 
  * Serving Flask app 'app_Malaga_Visual_Tool' (lazy loading)
  * Environment: production
