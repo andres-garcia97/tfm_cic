@@ -53,11 +53,10 @@ values_column_names = ["time", "branch" , "organization", "substation", "transfo
                         "aplus_L3", "aminus_L3", "RplusL_L3", "RminusL_L3", "RplusC_L3", "RminusC_L3"]
 
 # Read csv from local file
-data_lvsm = pd.read_csv('DATA/LVSM_Def.csv',  sep = ';', header=0, names=values_column_names, encoding='latin-1')
+# data_lvsm = pd.read_csv('DATA/LVSM_Def.csv',  sep = ';', header=0, names=values_column_names, encoding='latin-1')
 
 # Read csv from GitHub
-# url_data = 'https://gitlab.com/Ander_gargas/tfm-cic/-/raw/master/Listado_Trafos.csv'
-# data_lvsm = pd.read_csv(url_data,  sep = ';', header=0, names=values_column_names, encoding='latin-1')
+data_lvsm = pd.read_csv('https://raw.githubusercontent.com/andres-garcia97/tfm_cic/main/DATA/LVSM_Def.csv',  sep = ';', header=0, names=values_column_names, encoding='latin-1')
 
 # Cleaning data table
 data = data_lvsm.drop(["aplus_L1", "aminus_L1", "RplusL_L1", "RminusL_L1", "RplusC_L1", "RminusC_L1", 
@@ -137,11 +136,10 @@ info_column_names = ["ident", "transformer", "substation", "MT_line", "manufactu
 
 # Retrieve info table  
 # Read csv from local file
-full_info = pd.read_csv('DATA/Listado_Trafos.csv', header=0, sep=';', names=info_column_names, encoding='latin-1') 
+# full_info = pd.read_csv('DATA/Listado_Trafos.csv', header=0, sep=';', names=info_column_names, encoding='latin-1') 
 
 # Read csv from gitlab files
-# url_info = 'https://gitlab.com/Ander_gargas/tfm-cic/-/raw/master/Listado_Trafos.csv'
-# full_info = pd.read_csv(url_info,  sep = ';', header=0, names=values_column_names, encoding='latin-1')
+full_info = pd.read_csv('https://raw.githubusercontent.com/andres-garcia97/tfm_cic/main/DATA/Listado_Trafos.csv', header=0, sep=';', names=info_column_names, encoding='latin-1') 
 
 # Cleaning info table
 info = full_info.reset_index(drop = True)
