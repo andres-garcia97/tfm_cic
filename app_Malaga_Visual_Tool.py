@@ -85,6 +85,18 @@ for i, date in enumerate(data['time']):
 # Update the format
 data['time'] = pd.to_datetime(data['time'], format = '%Y-%m-%d %H:%M:%S')
 
+# Cleaning NA values
+if data.isna().sum().sum() < .10 * len(data): 
+    data = data.dropna()
+else:
+    raise Exception("Careful! Deleting NaN values would cut most of the dataset")
+
+# Remove duplicates
+if data.duplicated().sum() < .10 * len(data): 
+    data = data.drop_duplicates(subset=['time', 'substation', 'App SW'])
+else:
+    raise Exception("Careful! Deleting duplicated values would cut most of the dataset")
+
 # Copy of the dataframe to split date and hour
 data_new = data.copy(deep=True)
 
@@ -98,18 +110,6 @@ data_new = data_new.drop(["time"], axis=1)
 # Put both columns at the start
 data_new = pd.concat([data_new['hour'], data_new.drop('hour',axis=1)], axis=1)
 data_new = pd.concat([data_new['date'], data_new.drop('date',axis=1)], axis=1)
-
-# Cleaning NA values
-if data_new.isna().sum().sum() < .10 * len(data_new): 
-    data_new = data_new.dropna()
-else:
-    raise Exception("Careful! Deleting NaN values would cut most of the dataset")
-
-# Remove duplicates
-if data_new.duplicated().sum() < .10 * len(data_new): 
-    data_new = data_new.drop_duplicates(subset=['date', 'hour', 'substation', 'App SW'])
-else:
-    raise Exception("Careful! Deleting duplicated values would cut most of the dataset")
 
 # Feature extraction
 feat_names = ["V_L1", "I_L1", "W_L1", "QL_L1", "QC_L1"]
