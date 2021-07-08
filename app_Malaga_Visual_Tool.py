@@ -642,7 +642,6 @@ def update_map(n_clicks, date_picker, hour_selector, variable_items):
     # Rebuild a new datetime frame
     d = datetime.datetime(int(year), int(month), int(day), int(hour_selector))
     # Format it to the desired structure
-    date = d.strftime("%Y-%m-%d %H:%M")
 
     # Generate the list of values to use in later functions
     obs_values = data[data.time == pd.Timestamp(d)][['substation',str(variables_dict[variable_items])]]
@@ -723,7 +722,6 @@ def update_histogram(date_picker, hour_selector, variable_dropdown, substation_d
     month = date_picker_def.month
     year = date_picker_def.year
     d = datetime.datetime(int(year), int(month), int(day), int(hour_selector))
-    date = d.strftime("%Y-%m-%d %H:%M")
     
     obs_values = data[data.time == pd.Timestamp(d)][['substation', str(variables_dict[variable_dropdown])]]
     obs_values['substation'] = list(map(lambda x: x.replace("S",""), obs_values['substation'].tolist()))
