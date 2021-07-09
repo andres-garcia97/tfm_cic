@@ -175,7 +175,6 @@ app = dash.Dash(__name__,
     ]
 )
 
-# app = dash.Dash(__name__, title='Malaga Visual Tool')
 server = app.server
 app.config.suppress_callback_exceptions = True
 
