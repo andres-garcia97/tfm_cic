@@ -556,11 +556,11 @@ app.layout = html.Div(  # Global div
                                                         dcc.RadioItems( 
                                                             id = "viz-combination",
                                                             options=[
-                                                                {"label": "C3 - C2", "value": "c3c2"},
+                                                                {"label": "C2 - C1", "value": "c2c1"},
                                                                 {"label": "C3 - C1", "value": "c3c1"},
-                                                                {"label": "C2 - C1", "value": "c2c1"}
+                                                                {"label": "C3 - C2", "value": "c3c2"}
                                                             ],
-                                                            value="c3c2",      
+                                                            value="c2c1",      
                                                         ),
                                                     ],
                                                     style={
@@ -603,7 +603,7 @@ app.layout = html.Div(  # Global div
                     children = [
                         html.H5(id="CT-selected-analysis", style={'textAlign': 'center', 'width': '80%', 'margin-left': '10%'}),
                         dcc.Graph(
-                            id="outlier-3d-graph",
+                            id="outlier-graph",
                             style = {
                                 'width': '60vw'
                                 , 'height': '110vh'
@@ -932,14 +932,16 @@ def update_div(selection_mode):
 
 # Generate message from results and outlier map
 @app.callback(
-    Output(component_id='outlier-3d-graph', component_property='figure'),
+    Output(component_id='outlier-graph', component_property='figure'),
     Output(component_id='CT-selected-analysis', component_property='children'),
     [Input(component_id='btn-updt-outlier', component_property='n_clicks')],
     [State(component_id='substation-dropdown-analysis', component_property='value'),
      State(component_id='date-picker-range', component_property='start_date'),
-     State(component_id='date-picker-range', component_property='end_date')]
+     State(component_id='date-picker-range', component_property='end_date'),
+     State(component_id='viz-style', component_property='value'),
+     State(component_id='viz-combination', component_property='value')]
 )
-def update_outlier_graph(n_clicks, CT_selection, begin_date, end_date):
+def update_outlier_graph(n_clicks, CT_selection, begin_date, end_date, viz_style, viz_combination):
     
     ### Preparation of data
     dt_begin_date = dt.strptime(begin_date, '%Y-%m-%d').date()
@@ -979,6 +981,11 @@ def update_outlier_graph(n_clicks, CT_selection, begin_date, end_date):
     codings_inlier = codings_CT[(labels != -1) & (dt_begin_date <= date_list_CT) & (date_list_CT <= dt_end_date)]
     codings_outlier = codings_CT[(labels == -1) & (dt_begin_date <= date_list_CT) & (date_list_CT <= dt_end_date)]
 
+    # Mappings of attributes
+    symbol = {'not_selected': 'circle', 'inlier': 'circle', 'outlier': 'cross'}
+    color = {'not_selected': 'rgb(0, 0, 200)', 'inlier': 'rgb(0, 200, 0)', 'outlier': 'rgb(200, 0, 0)'}
+    size_dict = {'not_selected': 0.25, 'inlier': 1, 'outlier': 3}
+
     # We stack horizontally the codings, date (as a string) joined to hour and type of each point, useful for including hoverlabels and other properties in the visualization
     codings_not_selected = np.hstack((
         codings_not_selected, 
@@ -1001,29 +1008,75 @@ def update_outlier_graph(n_clicks, CT_selection, begin_date, end_date):
     else:
         df = pd.DataFrame(np.concatenate((codings_not_selected, codings_inlier, codings_outlier), axis=0), columns = ['C1', 'C2', 'C3', 'date', 'type']).astype({'C1': float, 'C2': float, 'C3': float, 'date': str, 'type': str})
 
-    # Mappings of attributes
-    symbol = {'not_selected': 'circle', 'inlier': 'circle', 'outlier': 'cross'}
-    color = {'not_selected': 'rgb(0, 0, 200)', 'inlier': 'rgb(0, 200, 0)', 'outlier': 'rgb(200, 0, 0)'}
-    size_dict = {'not_selected': 0.25, 'inlier': 1, 'outlier': 3}
-    
     df['size'] = np.vectorize(size_dict.get)(df['type']).tolist()
 
-    # Generate the 3D scatter plot
-    fig = px.scatter_3d(df, x='C1', y='C2', z='C3', 
-                        size = 'size',
-                        color = 'type',
-                        color_discrete_map = color,
-                        symbol = 'type',
-                        symbol_map = symbol,
-                        hover_name = 'date',
-                        hover_data = {
-                            'type': True,
-                            'C1': False,
-                            'C2': False,
-                            'C3': False,
-                            'size': False,
-                        }
-                    )
+    if viz_style == '3D':
+        # Generate the 3D scatter plot
+        fig = px.scatter_3d(df, x='C1', y='C2', z='C3', 
+                            size = 'size',
+                            color = 'type',
+                            color_discrete_map = color,
+                            symbol = 'type',
+                            symbol_map = symbol,
+                            hover_name = 'date',
+                            hover_data = {
+                                'type': True,
+                                'C1': False,
+                                'C2': False,
+                                'C3': False,
+                                'size': False,
+                            }
+        )
+
+    elif viz_style == '2D':
+        # We draw c2 in front of c1
+        if viz_combination == 'c2c1':
+            fig = px.scatter(df, x='C1', y='C2', 
+                                size = 'size',
+                                color = 'type',
+                                color_discrete_map = color,
+                                symbol = 'type',
+                                symbol_map = symbol,
+                                hover_name = 'date',
+                                hover_data = {
+                                    'type': True,
+                                    'C1': False,
+                                    'C2': False,
+                                    'size': False,
+                                }
+            )
+        # We draw c3 in front of c1
+        elif viz_combination == 'c3c1':
+            fig = px.scatter(df, x='C1', y='C3', 
+                                size = 'size',
+                                color = 'type',
+                                color_discrete_map = color,
+                                symbol = 'type',
+                                symbol_map = symbol,
+                                hover_name = 'date',
+                                hover_data = {
+                                    'type': True,
+                                    'C1': False,
+                                    'C3': False,
+                                    'size': False,
+                                }
+            )
+        # We draw c3 in front of c2
+        elif viz_combination == 'c3c2':
+            fig = px.scatter(df, x='C2', y='C3', 
+                                size = 'size',
+                                color = 'type',
+                                color_discrete_map = color,
+                                symbol = 'type',
+                                symbol_map = symbol,
+                                hover_name = 'date',
+                                hover_data = {
+                                    'type': True,
+                                    'C2': False,
+                                    'C3': False,
+                                    'size': False,
+                                }
+            )
         
     return fig, msg
 
