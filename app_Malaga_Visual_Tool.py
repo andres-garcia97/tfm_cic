@@ -477,6 +477,7 @@ app.layout = html.Div(  # Global div
                                 html.Br(),
                                 dcc.Markdown(intro_outlier_tab_eng),
                                 html.Br(),
+                                html.Br(),
                                 html.H4("Malaga Transformer Clustering", style={'margin-left':'6%'}),   # 30px
                             ],
                             style = {
@@ -526,6 +527,52 @@ app.layout = html.Div(  # Global div
                                                 )
                                             ]
                                         ),
+                                        html.Br(),                                        
+                                        html.Div(           # Selection of visualization style
+                                            children = [
+                                                html.Div(
+                                                    children=[
+                                                        html.P("Tipo de Visualización"),
+                                                        dcc.RadioItems( 
+                                                            id = "viz-style", 
+                                                            options=[
+                                                                {"label": "3D", "value": "3D"},
+                                                                {"label": "2D", "value": "2D"}
+                                                            ],
+                                                            value="3D",      
+                                                        ),
+                                                    ],
+                                                    style={
+                                                        'display': 'inline-block',
+                                                        'width':'45%',
+                                                        'margin-top': '0',
+                                                        'verticalAlign': 'top'
+                                                    }
+                                                ),
+                                                html.Div(
+                                                    id = "viz-combination-div",
+                                                    children = [
+                                                        html.P("Tipo de combinación"),
+                                                        dcc.RadioItems( 
+                                                            id = "viz-combination",
+                                                            options=[
+                                                                {"label": "C3 - C2", "value": "c3c2"},
+                                                                {"label": "C3 - C1", "value": "c3c1"},
+                                                                {"label": "C2 - C1", "value": "c2c1"}
+                                                            ],
+                                                            value="c3c2",      
+                                                        ),
+                                                    ],
+                                                    style={
+                                                        'display': 'inline-block',
+                                                        'width':'45%',
+                                                        'margin-left': '5%',
+                                                        'float': 'right',
+                                                        'verticalAlign': 'top'
+                                                    }
+                                                )
+                                            ]
+                                        ),
                                     ]
                                 ),
                                 html.Br(),
@@ -558,9 +605,10 @@ app.layout = html.Div(  # Global div
                         dcc.Graph(
                             id="outlier-3d-graph",
                             style = {
-                                'width': '90vw'
+                                'width': '60vw'
                                 , 'height': '110vh'
-                                , 'margin-left': '6%'
+                                , 'margin-left': '5%'
+                                , 'display': 'inline-block'
                             } 
                         )
                     ],
@@ -872,6 +920,15 @@ def update_line(date_picker, variable_dropdown, substation_dropdown, modo_hist):
 
 
 ###  CALLBACKS FROM OUTLIER TAB
+# Display the selection of variables only when '2D' is selected, hide if '3D' is selected
+@app.callback(
+    Output("viz-combination-div", "style"), 
+    [Input("viz-style", "value")]
+)
+def update_div(selection_mode):
+    if selection_mode == "3D":
+        return {"display": "none"}
+    return {"display": "inline-block"}
 
 # Generate message from results and outlier map
 @app.callback(
@@ -906,15 +963,15 @@ def update_outlier_graph(n_clicks, CT_selection, begin_date, end_date):
     # Labels predicting clusters and outliers, giving to these last a -1 value
     labels = db.labels_
 
-    indices_outliers = np.where(labels == -1)
+    indices_outliers = np.where(labels[(dt_begin_date <= date_list_CT) & (date_list_CT <= dt_end_date)] == -1)
 
     # If there were no outliers detected
-    if np.where(labels == -1)[0].size == 0:
+    if indices_outliers[0].size == 0:
         n_outlier = 0
         msg = ('\nAmong the dates {} and {}, {} points were found in total belonging to the CT {}. Among these, none of them are outliers.\n'.format(dt_begin_date.strftime("%Y-%m-%d"), dt_end_date.strftime("%Y-%m-%d"), len(codings_selected), CT_name))
 
     else:    
-        n_outlier = len(indices_outliers)
+        n_outlier = indices_outliers[0].size
         msg = ('\nAmong the dates {} and {}, {} points were found in total belonging to the CT {}. Among these, {} of them are outliers.\n'.format(dt_begin_date.strftime("%Y-%m-%d"), dt_end_date.strftime("%Y-%m-%d"), len(codings_selected), CT_name, n_outlier))
 
     # Filter data in 3 different arrays
