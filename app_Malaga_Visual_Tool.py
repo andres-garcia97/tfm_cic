@@ -21,6 +21,7 @@ import dash
 import dash_core_components as dcc
 import dash_html_components as html
 import dash_bootstrap_components as dbc
+import dash_table
 from dash.dependencies import Input, Output, State
 
 from plotly import graph_objs as go
@@ -126,7 +127,7 @@ X_std = sc.fit_transform(X)
 ### PCA Creation and codings representation on latent space
 pca = PCA(n_components = 3, svd_solver='auto')
 codings = pca.fit_transform(X_std)
-
+df_loadings = pd.DataFrame(np.around(pca.components_, decimals = 2), columns=feat_names, index=['PC1', 'PC2', 'PC3']).reset_index()
 
 
 ### Numeric values extraction 2 (excel Listado_Trafos.xlsx)
@@ -601,17 +602,39 @@ app.layout = html.Div(  # Global div
 
                 html.Div(           # Second Division: Outlier Detection map
                     children = [
-                        html.H5(id="CT-selected-analysis", style={'textAlign': 'center', 'width': '80%', 'margin-left': '10%'}),
-                        dcc.Graph(
-                            id="outlier-graph",
-                            style = {
-                                'width': '60vw'
-                                , 'height': '110vh'
-                                , 'margin-left': '5%'
-                                , 'display': 'inline-block'
-                            } 
+                        html.H5(
+                            id="CT-selected-analysis", 
+                            style={'textAlign': 'center', 'width': '90%', 'margin-left': '5%'}
+                        ),
+                        html.Div(
+                            children=[
+                                html.Div(
+                                    dcc.Graph(
+                                        id="outlier-graph"
+                                    ),
+                                    style = {
+                                        'display': 'inline-block'
+                                        , 'width': '65%'
+                                    } 
+                                ),
+                                html.Div(
+                                    dbc.Table.from_dataframe(
+                                        df_loadings, 
+                                        striped=True, 
+                                        dark=True,
+                                        bordered=True, 
+                                        hover=True,
+                                    ),
+                                    style = {
+                                        'display': 'inline-block'
+                                        , 'verticalAlign': 'top'
+                                        , 'margin-top': '5%'
+                                        , 'margin-left': '3%'
+                                    } 
+                                )
+                            ],
                         )
-                    ],
+                    ]
                 ),
             ],
             style = {'display': 'none'},
@@ -1004,15 +1027,15 @@ def update_outlier_graph(n_clicks, CT_selection, begin_date, end_date, viz_style
 
     # Generate the df, with column names and types
     if np.where(labels == -1)[0].size == 0:
-        df = pd.DataFrame(np.concatenate((codings_not_selected, codings_inlier), axis=0), columns = ['C1', 'C2', 'C3', 'date', 'type']).astype({'C1': float, 'C2': float, 'C3': float, 'date': str, 'type': str})
+        df = pd.DataFrame(np.concatenate((codings_not_selected, codings_inlier), axis=0), columns = ['PC1', 'PC2', 'PC3', 'date', 'type']).astype({'C1': float, 'C2': float, 'C3': float, 'date': str, 'type': str})
     else:
-        df = pd.DataFrame(np.concatenate((codings_not_selected, codings_inlier, codings_outlier), axis=0), columns = ['C1', 'C2', 'C3', 'date', 'type']).astype({'C1': float, 'C2': float, 'C3': float, 'date': str, 'type': str})
+        df = pd.DataFrame(np.concatenate((codings_not_selected, codings_inlier, codings_outlier), axis=0), columns = ['PC1', 'PC2', 'PC3', 'date', 'type']).astype({'PC1': float, 'PC2': float, 'PC3': float, 'date': str, 'type': str})
 
     df['size'] = np.vectorize(size_dict.get)(df['type']).tolist()
 
     if viz_style == '3D':
         # Generate the 3D scatter plot
-        fig = px.scatter_3d(df, x='C1', y='C2', z='C3', 
+        fig = px.scatter_3d(df, x='PC1', y='PC2', z='PC3', 
                             size = 'size',
                             color = 'type',
                             color_discrete_map = color,
@@ -1021,9 +1044,9 @@ def update_outlier_graph(n_clicks, CT_selection, begin_date, end_date, viz_style
                             hover_name = 'date',
                             hover_data = {
                                 'type': True,
-                                'C1': False,
-                                'C2': False,
-                                'C3': False,
+                                'PC1': False,
+                                'PC2': False,
+                                'PC3': False,
                                 'size': False,
                             }
         )
@@ -1031,7 +1054,7 @@ def update_outlier_graph(n_clicks, CT_selection, begin_date, end_date, viz_style
     elif viz_style == '2D':
         # We draw c2 in front of c1
         if viz_combination == 'c2c1':
-            fig = px.scatter(df, x='C1', y='C2', 
+            fig = px.scatter(df, x='PC1', y='PC2', 
                                 size = 'size',
                                 color = 'type',
                                 color_discrete_map = color,
@@ -1040,14 +1063,14 @@ def update_outlier_graph(n_clicks, CT_selection, begin_date, end_date, viz_style
                                 hover_name = 'date',
                                 hover_data = {
                                     'type': True,
-                                    'C1': False,
-                                    'C2': False,
+                                    'PC1': False,
+                                    'PC2': False,
                                     'size': False,
                                 }
             )
         # We draw c3 in front of c1
         elif viz_combination == 'c3c1':
-            fig = px.scatter(df, x='C1', y='C3', 
+            fig = px.scatter(df, x='PC1', y='PC3', 
                                 size = 'size',
                                 color = 'type',
                                 color_discrete_map = color,
@@ -1056,14 +1079,14 @@ def update_outlier_graph(n_clicks, CT_selection, begin_date, end_date, viz_style
                                 hover_name = 'date',
                                 hover_data = {
                                     'type': True,
-                                    'C1': False,
-                                    'C3': False,
+                                    'PC1': False,
+                                    'PC3': False,
                                     'size': False,
                                 }
             )
         # We draw c3 in front of c2
         elif viz_combination == 'c3c2':
-            fig = px.scatter(df, x='C2', y='C3', 
+            fig = px.scatter(df, x='PC2', y='PC3', 
                                 size = 'size',
                                 color = 'type',
                                 color_discrete_map = color,
@@ -1072,12 +1095,16 @@ def update_outlier_graph(n_clicks, CT_selection, begin_date, end_date, viz_style
                                 hover_name = 'date',
                                 hover_data = {
                                     'type': True,
-                                    'C2': False,
-                                    'C3': False,
+                                    'PC2': False,
+                                    'PC3': False,
                                     'size': False,
                                 }
             )
-        
+
+        fig.update_layout(
+                autosize=False
+            )
+
     return fig, msg
 
 
