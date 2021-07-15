@@ -604,7 +604,7 @@ app.layout = html.Div(  # Global div
                     children = [
                         html.H5(
                             id="CT-selected-analysis", 
-                            style={'textAlign': 'center', 'width': '90%', 'margin-left': '5%'}
+                            style={'textAlign': 'center', 'width': '70%', 'margin-left': '15%'}
                         ),
                         html.Div(
                             children=[
