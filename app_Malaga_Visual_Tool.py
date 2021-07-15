@@ -988,16 +988,19 @@ def update_outlier_graph(n_clicks, CT_selection, begin_date, end_date, viz_style
     # Labels predicting clusters and outliers, giving to these last a -1 value
     labels = db.labels_
 
-    indices_outliers = np.where(labels[(dt_begin_date <= date_list_CT) & (date_list_CT <= dt_end_date)] == -1)
+    indices_outliers_total = np.where(labels == -1)
+    n_outlier_total = indices_outliers_total[0].size
 
+    indices_outliers = np.where(labels[(dt_begin_date <= date_list_CT) & (date_list_CT <= dt_end_date)] == -1)
+    
     # If there were no outliers detected
     if indices_outliers[0].size == 0:
         n_outlier = 0
-        msg = ('\nAmong the dates {} and {}, {} points were found in total belonging to the CT {}. Among these, none of them are outliers.\n'.format(dt_begin_date.strftime("%Y-%m-%d"), dt_end_date.strftime("%Y-%m-%d"), len(codings_selected), CT_name))
+        msg = ('\nAmong the dates {} and {}, {} points were found in total belonging to the CT {}. Among these, none of them are outliers, from the {} detected in total.\n'.format(dt_begin_date.strftime("%Y-%m-%d"), dt_end_date.strftime("%Y-%m-%d"), len(codings_selected), CT_name, n_outlier_total))
 
     else:    
         n_outlier = indices_outliers[0].size
-        msg = ('\nAmong the dates {} and {}, {} points were found in total belonging to the CT {}. Among these, {} of them are outliers.\n'.format(dt_begin_date.strftime("%Y-%m-%d"), dt_end_date.strftime("%Y-%m-%d"), len(codings_selected), CT_name, n_outlier))
+        msg = ('\nAmong the dates {} and {}, {} points were found in total belonging to the CT {}. Among these, {} of them are outliers, from the {} detected in total.\n'.format(dt_begin_date.strftime("%Y-%m-%d"), dt_end_date.strftime("%Y-%m-%d"), len(codings_selected), CT_name, n_outlier, n_outlier_total))
 
     # Filter data in 3 different arrays
     codings_not_selected = codings_CT[(dt_begin_date >= date_list_CT) | (date_list_CT >= dt_end_date)]
